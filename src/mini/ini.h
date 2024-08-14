@@ -504,6 +504,7 @@ namespace mINI
 		using T_LineDataPtr = std::shared_ptr<T_LineData>;
 
 		std::string filename;
+		bool supportComment;
 
 		T_LineData getLazyOutput(T_LineDataPtr const& lineData, INIStructure& data, INIStructure& original)
 		{
@@ -519,7 +520,7 @@ namespace mINI
 			{
 				if (!writeNewKeys)
 				{
-					auto parseResult = INIParser::parseLine(*line, parseData);
+					auto parseResult = INIParser::parseLine(*line, parseData, supportComment);
 					if (parseResult == INIParser::PDataType::PDATA_SECTION)
 					{
 						if (parsingSection)
@@ -664,8 +665,7 @@ namespace mINI
 	public:
 		bool prettyPrint = false;
 
-		INIWriter(std::string const& filename)
-		: filename(filename)
+		INIWriter(std::string const& filename, bool supportComment = true) : supportComment(supportComment), filename(filename)
 		{
 		}
 		~INIWriter() { }
@@ -752,13 +752,13 @@ namespace mINI
 			generator.prettyPrint = pretty;
 			return generator << data;
 		}
-		bool write(INIStructure& data, bool pretty = false) const
+		bool write(INIStructure& data, bool supportComment = true, bool pretty = false) const
 		{
 			if (filename.empty())
 			{
 				return false;
 			}
-			INIWriter writer(filename);
+			INIWriter writer(filename, supportComment);
 			writer.prettyPrint = pretty;
 			return writer << data;
 		}
