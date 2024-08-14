@@ -278,7 +278,7 @@ namespace mINI
 			PDATA_UNKNOWN
 		};
 
-		inline PDataType parseLine(std::string line, T_ParseValues& parseData)
+		inline PDataType parseLine(std::string line, T_ParseValues& parseData, bool supportComment)
 		{
 			parseData.first.clear();
 			parseData.second.clear();
@@ -317,9 +317,12 @@ namespace mINI
 				INIStringUtil::trim(key);
 				INIStringUtil::replace(key, "\\=", "=");
 				auto value = line.substr(equalsAt + 1);
-				auto commentAt = value.find_first_of(';');
-				if (commentAt != std::string::npos)
-					value = value.erase(commentAt, value.length());
+				if (supportComment)
+				{
+					auto commentAt = value.find_first_of(';');
+					if (commentAt != std::string::npos)
+						value = value.erase(commentAt, value.length());
+				}
 				INIStringUtil::trim(value);
 				parseData.first = key;
 				parseData.second = value;
@@ -338,6 +341,7 @@ namespace mINI
 	private:
 		std::ifstream fileReadStream;
 		T_LineDataPtr lineData;
+		bool supportComment;
 
 		T_LineData readFile()
 		{
@@ -374,7 +378,7 @@ namespace mINI
 		}
 
 	public:
-		INIReader(std::string const& filename, bool keepLineData = false)
+		INIReader(std::string const& filename, bool supportComment = true, bool keepLineData = false) : supportComment(supportComment)
 		{
 			fileReadStream.open(filename, std::ios::in | std::ios::binary);
 			if (keepLineData)
@@ -396,7 +400,7 @@ namespace mINI
 			INIParser::T_ParseValues parseData;
 			for (auto const& line : fileLines)
 			{
-				auto parseResult = INIParser::parseLine(line, parseData);
+				auto parseResult = INIParser::parseLine(line, parseData, supportComment);
 				if (parseResult == INIParser::PDataType::PDATA_SECTION)
 				{
 					inSection = true;
@@ -725,7 +729,7 @@ namespace mINI
 
 		~INIFile() { }
 
-		bool read(INIStructure& data) const
+		bool read(INIStructure& data, bool supportComment = true) const
 		{
 			if (data.size())
 			{
@@ -735,7 +739,7 @@ namespace mINI
 			{
 				return false;
 			}
-			INIReader reader(filename);
+			INIReader reader(filename, supportComment);
 			return reader >> data;
 		}
 		bool generate(INIStructure const& data, bool pretty = false) const
