@@ -684,7 +684,7 @@ namespace mINI
 			T_LineDataPtr lineData;
 			bool readSuccess = false;
 			{
-				INIReader reader(filename, true);
+				INIReader reader(filename, supportComment, true);
 				if ((readSuccess = reader >> originalData))
 				{
 					lineData = reader.getLines();
